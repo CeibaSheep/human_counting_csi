@@ -76,12 +76,12 @@ def get_Y(path):
     return resized_label
 
 def get_test_data():
-    data = np.load('./X_test.npy')
+    data = np.load('../X_test.npy')
     data = data[:,0:56]
     lowDDdata, reconMat = pca(data)
     var_matrix = []
 
-    label = np.load('./Y_test_label.npy')
+    label = np.load('../Y_test_label.npy')
     label = label.T
     label = label[0]
     resized_label = []
@@ -112,8 +112,8 @@ def get_test_data():
     var_matrix = torch.tensor(var_matrix.reshape([var_matrix.shape[0], (pca_dim-1)*3]))
     return var_matrix, resized_label
 
-train_dataset = torch.from_numpy(get_X('./X_train.npy'))
-train_label = torch.from_numpy(get_Y('./Y_label.npy'))
+train_dataset = torch.from_numpy(get_X('../X_train.npy'))
+train_label = torch.from_numpy(get_Y('../Y_label.npy'))
 
 test_dataset, test_label = get_test_data()
 # CUDA_LAUNCH_BLOCKING = 1
