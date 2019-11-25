@@ -9,12 +9,12 @@ from torch.autograd import Variable
 import numpy as np
 import librosa
 #==============================================================================
-learning_rate = 0.0005
+learning_rate = 0.001
 num_epoches = 50
 batch_size = 10 # train 235 *1000 
 # test row = 129761
 pca_dim = 10
-var_batch = 50
+var_batch = 200
 slot_size = int(var_batch/2)
 #========================================================================
 def zeroMean(data):
