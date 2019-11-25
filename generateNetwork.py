@@ -9,8 +9,8 @@ from torch.autograd import Variable
 import numpy as np
 import librosa
 #==============================================================================
-learning_rate = 0.0005
-num_epoches = 50
+learning_rate = 0.001
+num_epoches = 100
 batch_size = 10 # train 235 *1000 
 # test row = 129761
 pca_dim = 10
@@ -156,7 +156,7 @@ def getbatch(index, X, Y):
     label = Y[start:end]
     return data, label
 
-model = Neuralnetwork(1*input_dim, 100, 50, 6) # need to be modified
+model = Neuralnetwork(1*input_dim, 120, 60, 6) # need to be modified
 if torch.cuda.is_available():
     model = model.cuda()
 
