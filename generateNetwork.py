@@ -9,11 +9,11 @@ from torch.autograd import Variable
 import numpy as np
 import librosa
 #==============================================================================
-learning_rate = 0.001
+learning_rate = 0.0008
 num_epoches = 100
-batch_size = 10 # train 235 *1000 
+batch_size = 20 # train 235 *1000 
 # test row = 129761
-pca_dim = 10
+pca_dim = 15
 var_batch = 50
 #========================================================================
 def zeroMean(data):
@@ -100,16 +100,17 @@ def get_test_data():
         # batch_sc = np.array(batch_sc)
         # batch_feature = np.hstack((batch_mean, batch_std, batch_var, batch_sc))
         batch_feature = np.hstack((batch_mean, batch_std, batch_var))
-        batch_feature = (batch_feature[0]).tolist()
+        batch_feature = np.ravel(batch_feature)
+        # batch_feature = (batch_feature[0]).tolist()
         batch_label = label[i*var_batch:(i+1)*var_batch]
         if (np.var(batch_label) == 0):
             batch_label = label[i * var_batch]
             var_matrix.append(batch_feature)
             resized_label.append(batch_label)
     
-    resized_label = torch.tensor(np.array(resized_label))
-    var_matrix = np.array(var_matrix)
-    var_matrix = torch.tensor(var_matrix.reshape([var_matrix.shape[0], (pca_dim-1)*3]))
+    resized_label = torch.from_numpy(np.array(resized_label))
+    var_matrix = torch.from_numpy(np.array(var_matrix))
+    # var_matrix = torch.tensor(var_matrix.reshape([var_matrix.shape[0], (pca_dim-1)*3]))
     return var_matrix, resized_label
 
 train_dataset = torch.from_numpy(get_X('../X_train.npy'))
@@ -156,7 +157,7 @@ def getbatch(index, X, Y):
     label = Y[start:end]
     return data, label
 
-model = Neuralnetwork(1*input_dim, 120, 60, 6) # need to be modified
+model = Neuralnetwork(1*input_dim, 80, 40, 6) # need to be modified
 if torch.cuda.is_available():
     model = model.cuda()
 
