@@ -9,12 +9,13 @@ from torch.autograd import Variable
 import numpy as np
 import librosa
 #==============================================================================
-learning_rate = 0.001
-num_epoches = 100
+learning_rate = 0.0005
+num_epoches = 50
 batch_size = 10 # train 235 *1000 
 # test row = 129761
 pca_dim = 10
-var_batch = 50
+var_batch = 25
+class_num = 3
 #========================================================================
 def zeroMean(data):
     meanVal = np.mean(data, axis=0)
@@ -37,7 +38,7 @@ def pca(data, n = pca_dim):
 
 def get_X(path):
     data = np.load(path)
-    data = data[:,0:56]
+    data = data[0:class_num * 40000,0:56]
     lowDDdata, reconMat = pca(data)
     var_matrix = []
     dim = round(lowDDdata.shape[0]/var_batch)
@@ -47,24 +48,17 @@ def get_X(path):
         batch_std = np.std(batch, axis = 0)
         batch_var = np.var(batch, axis = 0)
         batch_mean = np.mean(batch, axis = 0)
-        # spectral centroid
-        # for j in range(batch.shape[1]):
-        #     y =  np.ravel((batch[:,j]).T)
-        #     sc = librosa.feature.spectral_centroid(y, sr=8000)[0]
-        #     batch_sc = np.append(batch_sc,sc)
-        # batch_sc = np.array(batch_sc)
-        # batch_sc = np.reshape(batch_sc, (1, batch_sc.shape[0]))
         batch_feature = np.hstack((batch_mean, batch_std, batch_var))
         # batch_feature = (batch_feature[0]).tolist()
         batch_feature = np.ravel(batch_feature)
         var_matrix.append(batch_feature)
     var_matrix = np.array(var_matrix)
-    var_matrix = var_matrix.reshape([dim, (pca_dim-1)*3])
+    # var_matrix = var_matrix.reshape([dim, (pca_dim-1)*3])
     return var_matrix
 
 def get_Y(path):
     label = np.load(path)
-    label = label.T
+    label = (label[0:class_num*40000]).T
     label = label[0]
     resized_label = []
     dim = round(label.size/ var_batch)
@@ -92,24 +86,19 @@ def get_test_data():
         batch_std = np.std(batch, axis = 0)
         batch_var = np.var(batch, axis = 0)
         batch_mean = np.mean(batch, axis = 0)
-        # spectral centroid
-        # for j in range(batch.shape[1]):
-        #     y =  np.ravel((batch[:,j]).T)
-        #     sc = librosa.feature.spectral_centroid(y, sr=8000)[0]
-        #     batch_sc = np.append(batch_sc,sc)
-        # batch_sc = np.array(batch_sc)
-        # batch_feature = np.hstack((batch_mean, batch_std, batch_var, batch_sc))
         batch_feature = np.hstack((batch_mean, batch_std, batch_var))
-        batch_feature = (batch_feature[0]).tolist()
+        batch_feature = np.ravel(batch_feature)
         batch_label = label[i*var_batch:(i+1)*var_batch]
+        if 3.0 in batch_label : 
+            break
         if (np.var(batch_label) == 0):
             batch_label = label[i * var_batch]
             var_matrix.append(batch_feature)
             resized_label.append(batch_label)
     
     resized_label = torch.tensor(np.array(resized_label))
-    var_matrix = np.array(var_matrix)
-    var_matrix = torch.tensor(var_matrix.reshape([var_matrix.shape[0], (pca_dim-1)*3]))
+    var_matrix = torch.tensor(np.array(var_matrix))
+    # var_matrix = torch.tensor(var_matrix.reshape([var_matrix.shape[0], (pca_dim-1)*3]))
     return var_matrix, resized_label
 
 train_dataset = torch.from_numpy(get_X('../X_train.npy'))
@@ -156,7 +145,7 @@ def getbatch(index, X, Y):
     label = Y[start:end]
     return data, label
 
-model = Neuralnetwork(1*input_dim, 120, 60, 6) # need to be modified
+model = Neuralnetwork(1*input_dim, 50, 25, 6) # need to be modified
 if torch.cuda.is_available():
     model = model.cuda()
 
@@ -191,7 +180,7 @@ for epoch in range(num_epoches):
         loss.backward()
         optimizer.step()
         
-        if index % 100 == 0 :
+        if index % 50 == 0 :
             print ('{}/{} Loss: {:.6f}, Acc: {:.6f}'.format(
                 epoch+1, num_epoches, float(running_loss)/(batch_size*(index+1)), float(running_acc)/(batch_size * (index+1))
             ))
